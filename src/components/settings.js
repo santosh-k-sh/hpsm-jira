@@ -140,11 +140,11 @@ class Setting extends Component {
               <div className="row">
                 <div className="col-lg-12">
 
-                  <form onSubmit={this.loadData}>
+                  {/*<form onSubmit={this.loadData}>
                     <button type="submit">Load Data</button>
-                  </form>
+                  </form>*/}
 
-                  <Panel header={<span>Basic Form Elements</span>} >
+                  <Panel>
                     <div className="row">
                       <div className="col-lg-6">
 
@@ -184,7 +184,7 @@ class Setting extends Component {
                                 <FormControlFeedback />
                               </FormGroup>
 
-                              <select className="form-control" value={this.state.selectedTeam}
+                              {/*<select className="form-control" value={this.state.selectedTeam}
                                       onChange={(e) => this.setState({selectedTeam: e.target.value, validationError: e.target.value === "" ? "You must select your favourite team" : ""})}>>
                                 <option value="" >Select One</option>
                                   {
@@ -193,7 +193,7 @@ class Setting extends Component {
                                                          value={user.name}>{user.name}</option>;
                                       })
                                   }
-                              </select>
+                              </select>*/}
 
                               <div style={{color: 'red', marginTop: '5px'}}>
                                   {this.state.validationError}
@@ -205,7 +205,7 @@ class Setting extends Component {
 
                               <div>
                                   <Loader loaded={this.state.hpsmLoader}>
-                                      <b>{this.state.hpsmUserAuthenticated ? 'Login Success' : 'Login Failed'}</b>.
+                                      <b>{this.state.hpsmUserAuthenticated ? 'Login Success' : 'Login Failed'}</b>
                                   </Loader>
                               </div>
 
@@ -274,11 +274,11 @@ class Setting extends Component {
 
               <div className="row">
                   <div className="col-lg-12">
-                      <b>{this.state.userAuthenticated ? <JobSettings/> : ''}</b>.
+                      <b>{this.state.userAuthenticated ? <JobSettings/> : ''}</b>
                   </div>
               </div>
 
-                <JobSettings/>
+                <JobSettings/> {/* to be removed*/}
             </div> /* Main Div */
         )
     }
