@@ -20,14 +20,15 @@ import InputGroupAddon from 'react-bootstrap/lib/InputGroupAddon';
 
 
 import axios from 'axios';
-
 import Loader from 'react-loader';
+
 
 class JobSettings extends Component {
     constructor(props, context) {
         super(props, context);
 
         this.handleChange = this.handleChange.bind(this);
+
 
         this.state = {
             hpsmForm: '',
@@ -44,7 +45,6 @@ class JobSettings extends Component {
             hpsmUserObj: [],
             selectedTeam: "",
             validationError: "",
-            hpsmLoader: true,
             jiraLoader: true,
             userAuthenticated: false,
 
@@ -54,6 +54,8 @@ class JobSettings extends Component {
             selectedHPSMProjectId: '',
             selectedJIRAProjectId: '',
             selectedProjectIndexToRemove: '',
+            configLoader: true,
+            selectedJobHour: '',
 
             hpsmBusinessServices1: [
                 {id: "Vision.Core", name: "Vision.Core"},
@@ -85,12 +87,12 @@ class JobSettings extends Component {
     }
 
     componentDidMount() {
-        axios.get('http://localhost:8080/hpsmProjects')
+        axios.get('/hpsmProjects')
         .then(res => {
             this.setState( {hpsmBusinessServices: res.data});
         });
 
-        axios.get('http://localhost:8080/jiraProjects')
+        axios.get('/jiraProjects')
         .then(res => {
             this.setState( {jiraProjects: res.data});
         });
@@ -107,41 +109,42 @@ class JobSettings extends Component {
     }
 
     addBusinessServiceMappings = ()  => {
-        axios.get('http://localhost:8080/addBusinessMappings/?selectedHPSMProjectName='+this.state.selectedHPSMProjectId+'&selectedJIRAProjectName='+this.state.selectedJIRAProjectId)
+        axios.get('/addBusinessMappings/?selectedHPSMProjectName='+this.state.selectedHPSMProjectId+'&selectedJIRAProjectName='+this.state.selectedJIRAProjectId)
         .then(response => {
             this.setState({selectedHpsmJiraProjectMappings: response.data});
         });
     };
 
     removeBusinessServiceMappings = ()  => {
-        axios.post('http://localhost:8080/removeBusinessMappings/?selectedProjectIndexToRemove='+this.state.selectedProjectIndexToRemove)
+        axios.post('/removeBusinessMappings/?selectedProjectIndexToRemove='+this.state.selectedProjectIndexToRemove)
         .then(response => {
             this.setState({selectedHpsmJiraProjectMappings: response.data});
         });
     };
 
     saveConfiguration = ()  => {
-        axios.get('http://localhost:8080/saveConfiguration')
+        axios.get('/saveConfiguration')
             .then(response => {
             //this.setState({selectedHpsmJiraProjectMappings: response.data});
         });
     };
 
     loadHPSMProblems = ()  => {
-        axios.get('http://localhost:8080/loadHPSMProblems')
+        this.setState({configLoader: false});
+        axios.get('/loadHPSMProblems/?selectedJobHour='+this.state.selectedJobHour)
             .then(response => {
-            this.setState({problemsToMigrate: response.data});
+            this.setState({problemsToMigrate: response.data, configLoader: true});
         });
     };
-
 
     render() {
         return(
             <div>
-                <hr/>
+
+              <hr/>
               <div className="row">
                   <div className="col-lg-6">
-                      <FormGroup controlId="formControlsSelect">
+                      <FormGroup controlid="hpsmServiceTypeId">
                           <ControlLabel>HPSM Services Type</ControlLabel>
                           <FormControl componentClass="select" placeholder="select">
                               <option value="1">Problem</option>
@@ -150,7 +153,7 @@ class JobSettings extends Component {
                       </FormGroup>
                   </div>
                   <div className="col-lg-6">
-                      <FormGroup controlId="formControlsSelect">
+                      <FormGroup controlid="jiraTypeId">
                           <ControlLabel>JIRA Type</ControlLabel>
                           <FormControl componentClass="select" placeholder="select">
                               <option value="1">Problem</option>
@@ -162,7 +165,7 @@ class JobSettings extends Component {
 
               <div className="row">
                   <div className="col-lg-6">
-                      <FormGroup controlId="formControlsSelectMultiple">
+                      <FormGroup controlid="hpsmProjectId">
                           <ControlLabel>HPSM Business Services</ControlLabel>
                           <FormControl componentClass="select" multiple placeholder="select"
                                onChange={(e) => this.setState({selectedHPSMProjectId: e.target.value})}>
@@ -176,7 +179,7 @@ class JobSettings extends Component {
                       </FormGroup>
                   </div>
                   <div className="col-lg-6">
-                      <FormGroup controlId="formControlsSelect">
+                      <FormGroup controlid="selectedJIRAProjectId">
                           <ControlLabel>JIRA Projects</ControlLabel>
                           <FormControl componentClass="select" multiple placeholder="select"
                                onChange={(e) => this.setState({selectedJIRAProjectId: e.target.value})}>
@@ -193,7 +196,7 @@ class JobSettings extends Component {
 
               <div className="row">
                   <div className="col-md-2 col-md-offset-5">
-                      <FormGroup controlId="formControlsDisabledButton">
+                      <FormGroup controlid="formControlsDisabledButton">
                           <Button type="submit" onClick={e => this.addBusinessServiceMappings(e)} >Add</Button>
                           <Button type="submit" onClick={e => this.removeBusinessServiceMappings(e)}>Remove</Button>
                       </FormGroup>
@@ -206,7 +209,7 @@ class JobSettings extends Component {
                       onChange={ (e) => this.setState({selectedProjectIndexToRemove: e.target.selectedIndex})}>
                           {
                               this.state.selectedHpsmJiraProjectMappings.map(function(selectedProject) {
-                                  return <option key={selectedProject.projectId}
+                                  return <option key={selectedProject.projectName}
                                                  value={selectedProject.projectId}>{selectedProject.projectName}</option>;
                               })
                           }
@@ -218,7 +221,7 @@ class JobSettings extends Component {
                     <FormGroup>
                         <InputGroup>
                             <InputGroup.Addon>Schedule Type</InputGroup.Addon>
-                            <FormControl type="text" placeholder="Hourly"/>
+                            <FormControl type="text" placeholder="Hourly" onChange={ e => this.setState({selectedJobHour: e.target.value})} />
                         </InputGroup>
                     </FormGroup>
 
@@ -226,19 +229,38 @@ class JobSettings extends Component {
 
                 <div className="row">
                     <div className="col-lg-6">
-                        <FormGroup controlId="saveConfiguration">
-                            <Button type="submit" bsStyle="primary" onClick={e => this.loadHPSMProblems(e)}>Load HPSM Problem</Button>
+                        <FormGroup controlid="saveConfiguration">
+                            <Button type="submit" bsStyle="primary" onClick={e => this.loadHPSMProblems(e)}>Configure</Button>
                         </FormGroup>
                     </div>
                 </div>
+                <Loader loaded={this.state.configLoader}/>
+
+                <table className="table table-striped table-bordered table-condensed table-hover">
+                    <thead>
+                        <th>Problem Id</th>
+                        <th>Description</th>
+                        <th>Assignee</th>
+                        <th>Title</th>
+                    </thead>
+                    <tbody>
+                        {this.state.problemsToMigrate.map(problem => (
+                            <tr>
+                                <td key={problem.problemNo}>{problem.problemNo}</td>
+                                <td key={problem.problemNo}>{problem.problemDescription}</td>
+                                <td key={problem.problemNo}>{problem.problemAssignee}</td>
+                                <td key={problem.problemNo}>{problem.problemTitle}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
 
 
-
-                <ul>
+                {/*<ul>
                     {this.state.problemsToMigrate.map(problem => (
                         <li key={problem.problemNo}>{problem.problemNo} {problem.problemDescription} {problem.problemAssignee} {problem.problemTitle}</li>
                     ))}
-                </ul>
+                </ul>*/}
 
             </div> /* Main Div */
         )

@@ -22,9 +22,8 @@ import JobSettings from '../components/JobSettings';
 
 
 import axios from 'axios';
-
 import Loader from 'react-loader';
-const title = 'Forms Test';
+import Notifications, {notify} from 'react-notify-toast';
 
 class Setting extends Component {
     constructor(props, context) {
@@ -38,10 +37,12 @@ class Setting extends Component {
             hpsmUserName: '',
             hpsmUserPassword: '',
             hpsmUserAuthenticated: false,
+            hpsmLoginBtnClicked: false,
             jiraURL: 'https://emaratech.atlassian.net',
             jiraUserName: '',
             jiraPassword: '',
             jiraUserAuthenticated: false,
+            jiraLoginBtnClicked: false,
             username: '',
             persons: [],
             hpsmUserObj: [],
@@ -52,7 +53,6 @@ class Setting extends Component {
             userAuthenticated: false
         };
     }
-
 
     handleChange(e) {
       e.preventDefault();
@@ -73,25 +73,25 @@ class Setting extends Component {
         name: this.state.hpsmUserName
       };
 
-      /*axios.post('https://jsonplaceholder.typicode.com/users', { user })
-          .then(res => {
-            console.log(res);
-            console.log(res.data);
-          });*/
-
-
        // Passing req param directly -- axios.post('http://localhost:8080/sum/?hpsmUrl='+this.state.hpsmURL+'&hpsmUserName='+this.state.hpsmUserName+'&hpsmPassword='+this.state.hpsmUserPassword)
         // another method to pass data
-        axios.post('http://localhost:8080/validatehpsm',
+        axios.post('/validatehpsm',
             {
                 'hpsmUrl': this.state.hpsmURL,
                 'hpsmUserName': this.state.hpsmUserName,
                 'hpsmPassword': this.state.hpsmUserPassword
             }).then(response => {
-              this.setState( {hpsmUserAuthenticated: response.data, hpsmLoader:true});
-            console.log(response.data);
+                this.setState( {hpsmUserAuthenticated: response.data, hpsmLoader:true, hpsmLoginBtnClicked:true});
+                if(this.state.hpsmUserAuthenticated) {
+                    notify.show('Login verified !', 'success');
+                } else {
+                    notify.show('Login failed !', 'error');
+                }
+                if(this.state.hpsmUserAuthenticated && this.state.jiraUserAuthenticated) {
+                    this.setState({userAuthenticated:true});
+                }
           }).catch(error => {
-              alert(error);
+              notify.show(error);
       });
 
     }
@@ -100,16 +100,24 @@ class Setting extends Component {
         e.preventDefault();
         this.setState( {jiraLoader: false});
 
-        axios.post('http://localhost:8080/authenticatejira',
+        axios.post('/authenticatejira',
             {
                 'jiraURL': this.state.jiraURL,
                 'jiraUserName': this.state.jiraUserName,
                 'jiraPassword': this.state.jiraPassword
             }).then(response => {
-            this.setState( {jiraUserAuthenticated: response.data, jiraLoader:true, userAuthenticated:true});
+            this.setState( {jiraUserAuthenticated: response.data, jiraLoader:true, jiraLoginBtnClicked:true});
+            if(this.state.jiraUserAuthenticated) {
+                notify.show('Login verified !', 'success');
+            } else {
+                notify.show('Login failed !', 'error');
+            }
+            if(this.state.hpsmUserAuthenticated && this.state.jiraUserAuthenticated) {
+                this.setState({userAuthenticated:true});
+            }
             console.log(response.data);
         }).catch(error => {
-            alert(error);
+            notify.show(error);
         });
 
     }
@@ -131,18 +139,15 @@ class Setting extends Component {
     render() {
         return(
             <div className="container">
+                <Notifications />
               <div className="row">
                 <div className="col-lg-12">
-                  <PageHeader>Setting</PageHeader>
+                  <PageHeader>Configure</PageHeader>
                 </div>
               </div>
 
               <div className="row">
                 <div className="col-lg-12">
-
-                  {/*<form onSubmit={this.loadData}>
-                    <button type="submit">Load Data</button>
-                  </form>*/}
 
                   <Panel>
                     <div className="row">
@@ -151,10 +156,10 @@ class Setting extends Component {
                         <Form>
                           <Panel bsStyle="primary">
                             <Panel.Heading>
-                              <Panel.Title componentClass="h3">HPSM Login</Panel.Title>
+                              <Panel.Title componentClass="h2">HPSM Login</Panel.Title>
                             </Panel.Heading>
                             <Panel.Body>
-                              <FormGroup controlId="hpsmURLId">
+                              <FormGroup controlid="hpsmURLId">
                                 <ControlLabel>URL</ControlLabel>
                                 <FormControl type="text" name="hpsmURL" value={this.state.hpsmURL}
                                        onChange={ e => this.handleChange(e)} />
@@ -162,9 +167,9 @@ class Setting extends Component {
                                 <HelpBlock>HPSM server URL</HelpBlock>
                               </FormGroup>
 
-                              <FormGroup controlId="hpsmUserNameId">
+                              <FormGroup controlid="hpsmUserNameId">
                                 <ControlLabel>User Name</ControlLabel>
-                                <FormControl
+                                  <FormControl bsClass={this.state.hpsmUserAuthenticated ? 'form-control': this.state.hpsmLoginBtnClicked ? 'form-control danger': 'form-control'}
                                     name="hpsmUserName"
                                     type="text"
                                     placeholder="User Name"
@@ -173,12 +178,12 @@ class Setting extends Component {
                                 <FormControlFeedback />
                               </FormGroup>
 
-                              <FormGroup controlId="hpsmPasswordId">
+                              <FormGroup controlid="hpsmPasswordId">
                                 <ControlLabel>Password</ControlLabel>
-                                <FormControl
+                                <FormControl bsClass={this.state.hpsmUserAuthenticated ? 'form-control': this.state.hpsmLoginBtnClicked ? 'form-control danger': 'form-control'}
                                     name="hpsmUserPassword"
                                     type="password"
-                                    placeholder="Password"
+                                    placeholder="Password" required
                                     onChange={ e => this.handleChange(e)}
                                 />
                                 <FormControlFeedback />
@@ -199,21 +204,18 @@ class Setting extends Component {
                                   {this.state.validationError}
                               </div>
 
-                              <FormGroup controlId="formControlsDisabledButton">
+                              <FormGroup controlid="formControlButtonHPSMLogin">
                                 <Button bsStyle="primary" type="submit" onClick={e => this.doHPSMLogin(e)} >Sign In</Button>
                               </FormGroup>
 
                               <div>
-                                  <Loader loaded={this.state.hpsmLoader}>
-                                      <b>{this.state.hpsmUserAuthenticated ? 'Login Success' : 'Login Failed'}</b>
-                                  </Loader>
+                                  <Loader loaded={this.state.hpsmLoader}/>
                               </div>
 
                             </Panel.Body>
                           </Panel>
                         </Form>
                       </div>
-
 
                       <div className="col-lg-6">
                         <Form>
@@ -222,16 +224,17 @@ class Setting extends Component {
                               <Panel.Title componentClass="h3">JIRA Login</Panel.Title>
                             </Panel.Heading>
                             <Panel.Body>
-                              <FormGroup controlId="jiraURLId">
+                              <FormGroup controlid="jiraURLId">
                                 <ControlLabel>URL</ControlLabel>
                                 <FormControl type="text" name="jiraURL" value="https://emaratech.atlassian.net"/>
                                 <FormControlFeedback />
                                 <HelpBlock>JIRA server URL</HelpBlock>
                               </FormGroup>
 
-                              <FormGroup controlId="jiraUserId">
+                              <FormGroup controlid="jiraUserId">
                                 <ControlLabel>User Name</ControlLabel>
-                                <FormControl controlId="jiraUserNameId"
+                                  <FormControl bsClass={this.state.jiraUserAuthenticated ? 'form-control': this.state.jiraLoginBtnClicked ? 'form-control danger': 'form-control'}
+                                    controlid="jiraUserNameId"
                                     type="text"
                                     name="jiraUserName"
                                     placeholder="User Name"
@@ -240,9 +243,9 @@ class Setting extends Component {
                                 <FormControlFeedback />
                               </FormGroup>
 
-                              <FormGroup controlId="jiraPasswordId">
+                              <FormGroup controlid="jiraPasswordId">
                                 <ControlLabel>Password</ControlLabel>
-                                <FormControl
+                                  <FormControl bsClass={this.state.jiraUserAuthenticated ? 'form-control': this.state.jiraLoginBtnClicked ? 'form-control danger': 'form-control'}
                                     type="password"
                                     name="jiraPassword"
                                     placeholder="Password"
@@ -251,14 +254,14 @@ class Setting extends Component {
                                 <FormControlFeedback />
                               </FormGroup>
 
-                              <FormGroup controlId="formControlsDisabledButton">
+                              <FormGroup controlid="formControlButtonJiraLogin">
                                   <Button bsStyle="primary" type="submit" onClick={e => this.doJIRALogin(e)}>Sign In</Button>
                               </FormGroup>
 
                               <div>
-                                  <Loader loaded={this.state.jiraLoader}>
-                                      <b>{this.state.jiraUserAuthenticated ? 'Login Success' : 'Login Failed'}</b>.
-                                  </Loader>
+                                  <Loader loaded={this.state.jiraLoader}/>
+                                      {/*<b>{this.state.jiraUserAuthenticated ? 'Login Success' : 'Login Failed'}</b>
+                                  </Loader>*/}
                               </div>
 
                             </Panel.Body>
@@ -278,7 +281,7 @@ class Setting extends Component {
                   </div>
               </div>
 
-                <JobSettings/> {/* to be removed*/}
+                 {/* to be removed*/}
             </div> /* Main Div */
         )
     }
