@@ -57,30 +57,7 @@ class JobSettings extends Component {
             configLoader: true,
             selectedJobHour: '',
 
-            hpsmBusinessServices1: [
-                {id: "Vision.Core", name: "Vision.Core"},
-                {id: "Vision.BorderControl", name: "Vision.BorderControl"},
-                {id: "FIS.Backend", name: "FIS.Backend"},
-                {id: "LegacyeDNRD", name: "LegacyeDNRD"},
-                {id: "VisioneDNRD", name: "VisioneDNRD"},
-                {id: "VisioneDNRD.Portal", name: "VisioneDNRD.Portal"},
-                {id: "VisioneDNRD.Portal.ETA", name: "VisioneDNRD.Portal.ETA"},
-                {id: "LegacyeForm", name: "LegacyeForm"},
-                {id: "LegacyeForm.Portal", name: "LegacyeForm.Portal"},
-                {id: "VisioneForm.ChannelPartners.Registration", name: "VisioneForm.ChannelPartners.Registration"}
-            ],
-            jiraProjects1: [
-                {id: "TVIS", name: "Vision"},
-                {id: "VFIS", name: "FIS"},
-                {id: "TARA", name: "ARA"},
-                {id: "TGATES", name: "Gates"},
-                {id: "TEDNRD", name: "eDNRD"},
-                {id: "TNOQ", name: "Mobile"},
-                {id: "TVIS", name: "Noqodi (Legacy)"},
-                {id: "TEAP", name: "EAP"},
-                {id: "TIQC", name: "IQC"},
-                {id: "TNGE", name: "NGE"},
-            ],
+
             selectedHpsmJiraProjectMappings: [],
             problemsToMigrate: []
         };
@@ -129,11 +106,14 @@ class JobSettings extends Component {
         });
     };
 
-    loadHPSMProblems = ()  => {
+    loadHPSMProblems = (e)  => {
+        e.preventDefault();
         this.setState({configLoader: false});
         axios.get('/loadHPSMProblems/?selectedJobHour='+this.state.selectedJobHour)
             .then(response => {
-            this.setState({problemsToMigrate: response.data, configLoader: true});
+                console.log('response returned...' + response.data);
+                this.setState({problemsToMigrate: response.data, configLoader: true
+            });
         });
     };
 
@@ -185,7 +165,7 @@ class JobSettings extends Component {
                                onChange={(e) => this.setState({selectedJIRAProjectId: e.target.value})}>
                               {
                                   this.state.jiraProjects.map(function(jiraProject) {
-                                      return <option key={jiraProject.projectId}
+                                      return <option key={jiraProject.projectId - jiraProject.projectName}
                                                      value={jiraProject.projectId}>{jiraProject.projectName}</option>;
                                   })
                               }
@@ -230,7 +210,7 @@ class JobSettings extends Component {
                 <div className="row">
                     <div className="col-lg-6">
                         <FormGroup controlid="saveConfiguration">
-                            <Button type="submit" bsStyle="primary" onClick={e => this.loadHPSMProblems(e)}>Configure</Button>
+                            <Button type="submit" bsStyle="primary" onClick={e => this.loadHPSMProblems(e)}>Setup</Button>
                         </FormGroup>
                     </div>
                 </div>
