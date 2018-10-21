@@ -21,6 +21,8 @@ import InputGroupAddon from 'react-bootstrap/lib/InputGroupAddon';
 
 import axios from 'axios';
 import Loader from 'react-loader';
+import {connect} from 'react-redux';
+import {updateCompletedProblems} from '../actions/index';
 
 
 class JobSettings extends Component {
@@ -112,8 +114,8 @@ class JobSettings extends Component {
         axios.get('/loadHPSMProblems/?selectedJobHour='+this.state.selectedJobHour)
             .then(response => {
                 console.log('response returned...' + response.data);
-                this.setState({problemsToMigrate: response.data, configLoader: true
-            });
+                this.setState({problemsToMigrate: response.data, configLoader: true});
+                this.props.updateProblemLists(this.state.problemsToMigrate);
         });
     };
 
@@ -216,36 +218,19 @@ class JobSettings extends Component {
                 </div>
                 <Loader loaded={this.state.configLoader}/>
 
-                <table className="table table-striped table-bordered table-condensed table-hover">
-                    <thead>
-                        <th>Problem Id</th>
-                        <th>Description</th>
-                        <th>Assignee</th>
-                        <th>Title</th>
-                    </thead>
-                    <tbody>
-                        {this.state.problemsToMigrate.map(problem => (
-                            <tr>
-                                <td key={problem.problemNo}>{problem.problemNo}</td>
-                                <td key={problem.problemNo}>{problem.problemDescription}</td>
-                                <td key={problem.problemNo}>{problem.problemAssignee}</td>
-                                <td key={problem.problemNo}>{problem.problemTitle}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-
-
-                {/*<ul>
-                    {this.state.problemsToMigrate.map(problem => (
-                        <li key={problem.problemNo}>{problem.problemNo} {problem.problemDescription} {problem.problemAssignee} {problem.problemTitle}</li>
-                    ))}
-                </ul>*/}
-
             </div> /* Main Div */
         )
     }
 }
 
-export default JobSettings;
+function mapStateToProps(state) {
+    return { hpsmUserName: state.authReducer.hpsmUserName }
+}
 
+function mapDispatchToProps(dispatch) {
+    return({
+        updateProblemLists: (problemList)=>{dispatch(updateCompletedProblems(problemList))}
+    })
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(JobSettings);

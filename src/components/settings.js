@@ -18,6 +18,9 @@ import FormControlFeedback from 'react-bootstrap/lib/FormControlFeedback';
 import FormControlStatic from 'react-bootstrap/lib/FormControlStatic';
 import InputGroupAddon from 'react-bootstrap/lib/InputGroupAddon';
 
+import {connect} from 'react-redux';
+import {doChangeHPSMUserName, updateUserAuthentication} from '../actions/index';
+
 import JobSettings from '../components/JobSettings';
 
 
@@ -30,6 +33,7 @@ class Setting extends Component {
         super(props, context);
 
         this.handleChange = this.handleChange.bind(this);
+        /*this.handleNameChange = this.handleNameChange.bind(this);*/
 
         this.state = {
             hpsmForm: '',
@@ -63,6 +67,11 @@ class Setting extends Component {
       console.log("Fields : " + this.state.hpsmUserName)
     }
 
+    /*handleNameChange(e) {
+        e.preventDefault();
+        this.props.changeHPSMUserName(e);
+    }*/
+
     doHPSMLogin = (e) => {
       e.preventDefault();
       console.log(this.state);
@@ -90,6 +99,7 @@ class Setting extends Component {
                 if(this.state.hpsmUserAuthenticated && this.state.jiraUserAuthenticated) {
                     this.setState({userAuthenticated:true});
                 }
+            this.props.changeHPSMUserName(this.state.hpsmUserName);
           }).catch(error => {
               notify.show(error);
       });
@@ -111,9 +121,12 @@ class Setting extends Component {
                 notify.show('Login verified !', 'success');
             } else {
                 notify.show('Login failed !', 'error');
+                this.props.updateUserAuthentication(false);
             }
             if(this.state.hpsmUserAuthenticated && this.state.jiraUserAuthenticated) {
                 this.setState({userAuthenticated:true});
+                this.props.updateUserAuthentication(true);
+
             }
             console.log(response.data);
         }).catch(error => {
@@ -277,7 +290,7 @@ class Setting extends Component {
 
               <div className="row">
                   <div className="col-lg-12">
-                      <b>{this.state.userAuthenticated ? <JobSettings/> : ''}</b>
+                      <b>{this.props.userAuthenticated ? <JobSettings/> : ''}</b>
                   </div>
               </div>
 
@@ -287,5 +300,19 @@ class Setting extends Component {
     }
 }
 
-export default Setting;
+function mapStateToProps(state) {
+    return {
+        hpsmUserName: state.authReducer.hpsmUserName,
+        userAuthenticated: state.authReducer.userAuthenticated
+    }
+}
+
+function mapDispatchToProps(dispatch) {
+    return({
+        changeHPSMUserName: (userName)=>{dispatch(doChangeHPSMUserName(userName))},
+        updateUserAuthentication: (flag) => {dispatch(updateUserAuthentication(flag))}
+    })
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Setting);
 
